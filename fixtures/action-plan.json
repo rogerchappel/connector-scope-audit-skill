@@ -1,0 +1,7 @@
+{
+  "connector": "crm",
+  "scopes": ["contacts.read", "contacts.write"],
+  "dataClasses": ["contact"],
+  "actions": ["update"],
+  "approval": "User approved updating the CRM contact follow-up field."
+}
