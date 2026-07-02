@@ -13,8 +13,21 @@
     "test": "node --test",
     "check": "node scripts/check-package.js",
     "build": "node scripts/check-package.js",
-    "smoke": "node bin/connector-scope-audit.js audit fixtures/action-plan.json --policy fixtures/policy.json --json"
+    "smoke": "node bin/connector-scope-audit.js audit fixtures/action-plan.json --policy fixtures/policy.json --json",
+    "package:smoke": "node scripts/package-smoke.js",
+    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
   },
+  "files": [
+    "bin",
+    "docs",
+    "fixtures",
+    "src",
+    "SKILL.md",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CONTRIBUTING.md"
+  ],
   "keywords": [
     "agent-skills",
     "connectors",
