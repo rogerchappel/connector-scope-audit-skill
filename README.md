@@ -41,6 +41,7 @@ This package only reads local JSON files. It does not call connectors, grant per
 
 ```sh
 npm run check
+npm run lint
 npm test
 npm run smoke
 npm run package:smoke

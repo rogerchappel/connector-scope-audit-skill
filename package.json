@@ -15,7 +15,8 @@
     "build": "node scripts/check-package.js",
     "smoke": "node bin/connector-scope-audit.js audit fixtures/action-plan.json --policy fixtures/policy.json --json",
     "package:smoke": "node scripts/package-smoke.mjs",
-    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
+    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke",
+    "lint": "npm run check"
   },
   "keywords": [
     "agent-skills",
