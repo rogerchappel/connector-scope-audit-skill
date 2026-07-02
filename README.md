@@ -10,6 +10,12 @@ npm run smoke
 node bin/connector-scope-audit.js audit fixtures/action-plan.json --policy fixtures/policy.json
 ```
 
+Run the full release-candidate gate before publishing or opening a release PR:
+
+```sh
+npm run release:check
+```
+
 ## CLI
 
 ```sh
@@ -30,6 +36,20 @@ console.log(report.decision);
 ## Safety Notes
 
 This package only reads local JSON files. It does not call connectors, grant permissions, create remote records, or send messages.
+
+## Verification
+
+```sh
+npm run check
+npm test
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
+
+`npm run package:smoke` performs a dry-run npm pack and asserts that the CLI,
+library source, fixtures, example plan, skill instructions, changelog, license,
+and security policy are present in the tarball.
 
 ## Limitations
 
