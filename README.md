@@ -6,7 +6,7 @@
 
 ```sh
 npm install
-npm run smoke
+npm run release:check
 node bin/connector-scope-audit.js audit fixtures/action-plan.json --policy fixtures/policy.json
 ```
 
@@ -30,6 +30,13 @@ console.log(report.decision);
 ## Safety Notes
 
 This package only reads local JSON files. It does not call connectors, grant permissions, create remote records, or send messages.
+
+## Release Readiness
+
+`npm run release:check` runs the metadata check, tests, fixture-backed CLI smoke,
+and an npm package smoke that verifies the published tarball includes the CLI,
+library entry, docs, fixtures, README, license, security policy, and contributing
+guide.
 
 ## Limitations
 
