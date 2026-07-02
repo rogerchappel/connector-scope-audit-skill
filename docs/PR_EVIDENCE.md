@@ -2,10 +2,10 @@
 
 ## Verification Commands
 
-- `npm test`
-- `npm run check`
-- `npm run build`
-- `npm run smoke`
+- `npm test` - pass, 5 tests.
+- `npm run check` - pass, package check passed.
+- `npm run build` - pass, package check passed.
+- `npm run smoke` - pass, emitted JSON connector audit report with `decision: pass`.
 
 ## Release Gate
 
