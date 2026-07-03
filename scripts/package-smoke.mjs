@@ -11,6 +11,7 @@ const required = [
   "fixtures/action-plan.json",
   "fixtures/policy.json",
   "examples/blocked-plan.json",
+  "docs/RELEASE_CANDIDATE.md",
   "SKILL.md",
   "README.md",
   "LICENSE",
