@@ -95,7 +95,7 @@ function auditActions(actions, policy) {
 function auditApprovals(plan, policy) {
   const hasWrite = plan.actions.some((action) => WRITE_ACTIONS.has(action));
   if (hasWrite && policy.requireApprovalForWrites && !plan.approval) {
-    return [{ severity: "warn", message: "Write action requested without approval evidence." }];
+    return [{ severity: "block", message: "Write action requested without approval evidence." }];
   }
   if (hasWrite && plan.approval) {
     return [{ severity: "info", message: "Write approval evidence is present." }];
