@@ -27,14 +27,29 @@ test("passes approved in-policy write plan", () => {
   assert.equal(report.decision, "pass");
 });
 
-test("warns on missing write approval", () => {
+test("blocks missing write approval when policy requires it", () => {
   const report = auditPlan({
     connector: "crm",
     scopes: ["contacts.read"],
     dataClasses: ["contact"],
     actions: ["update"]
   }, policy);
-  assert.equal(report.decision, "warn");
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some((finding) =>
+    finding.severity === "block"
+    && finding.message === "Write action requested without approval evidence."
+  ));
+});
+
+test("allows missing write approval when policy does not require it", () => {
+  const report = auditPlan({
+    connector: "crm",
+    scopes: ["contacts.read"],
+    dataClasses: ["contact"],
+    actions: ["update"]
+  }, { ...policy, requireApprovalForWrites: false });
+  assert.equal(report.decision, "pass");
+  assert.ok(!report.findings.some((finding) => finding.message.includes("approval")));
 });
 
 test("blocks unknown scope and write action", () => {

@@ -16,7 +16,12 @@ The skill reads local files and writes reports to stdout only. It must not call 
 
 ## Approval Requirements
 
-Write actions require explicit approval evidence when the policy lists `requireApprovalForWrites`. Unknown scopes, unknown data classes, and unapproved write actions should block execution until a human resolves them.
+Write actions require nonempty explicit approval evidence when the policy sets
+`requireApprovalForWrites` to `true`; a missing approval then produces a
+`block` decision and CLI exit status 2. When that setting is `false`, missing
+approval evidence does not affect the decision. Unknown scopes, unknown data
+classes, and write actions not allowed by policy also block execution until a
+human resolves them.
 
 ## Examples
 

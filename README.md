@@ -24,6 +24,12 @@ connector-scope-audit audit <plan.json> --policy <policy.json> [--json]
 
 Plans should describe the connector, scopes, data classes, actions, and approval note. Policies define allowed scopes, data classes, write actions, and approvals that are required for writes.
 
+The decision is `block` when a requested scope, data class, or write action is
+outside policy, or when a write lacks approval evidence while
+`requireApprovalForWrites` is `true`. Missing approval evidence does not affect
+the decision when that policy setting is `false`. The CLI exits with status `2`
+for `block`, `0` for `pass` or `warn`, and `1` for usage or input errors.
+
 ## Library
 
 ```js
@@ -65,4 +71,3 @@ npm run build --if-present
 npm test --if-present
 npm run smoke --if-present
 ```
-
