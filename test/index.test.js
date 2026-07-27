@@ -5,6 +5,7 @@ import { auditPlan, normalizePlan, renderMarkdown } from "../src/index.js";
 const policy = {
   allowedScopes: ["contacts.read", "contacts.write"],
   allowedDataClasses: ["contact"],
+  allowedReadActions: ["read"],
   allowedWriteActions: ["update"],
   requireApprovalForWrites: true
 };
@@ -50,6 +51,48 @@ test("allows missing write approval when policy does not require it", () => {
   }, { ...policy, requireApprovalForWrites: false });
   assert.equal(report.decision, "pass");
   assert.ok(!report.findings.some((finding) => finding.message.includes("approval")));
+});
+
+test("blocks actions that policy does not classify", () => {
+  const report = auditPlan({
+    connector: "crm",
+    scopes: ["contacts.write"],
+    dataClasses: ["contact"],
+    actions: ["archive"],
+    approval: "User approved archiving the contact."
+  }, policy);
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some((finding) =>
+    finding.message === "Action is not allowed by policy: archive"
+  ));
+});
+
+test("requires approval for policy-defined write actions", () => {
+  const archivePolicy = {
+    ...policy,
+    allowedWriteActions: [...policy.allowedWriteActions, "archive"]
+  };
+  const plan = {
+    connector: "crm",
+    scopes: ["contacts.write"],
+    dataClasses: ["contact"],
+    actions: ["archive"]
+  };
+
+  const missingApproval = auditPlan(plan, archivePolicy);
+  assert.equal(missingApproval.decision, "block");
+  assert.ok(missingApproval.findings.some((finding) =>
+    finding.message === "Write action requested without approval evidence."
+  ));
+
+  const approved = auditPlan({
+    ...plan,
+    approval: "User approved archiving the contact."
+  }, archivePolicy);
+  assert.equal(approved.decision, "pass");
+  assert.ok(approved.findings.some((finding) =>
+    finding.message === "Write approval evidence is present."
+  ));
 });
 
 test("blocks unknown scope and write action", () => {
