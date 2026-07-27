@@ -1,5 +1,3 @@
-const WRITE_ACTIONS = new Set(["create", "update", "delete", "send", "publish", "merge", "comment"]);
-
 export function auditPlan(plan, policy, options = {}) {
   const normalized = normalizePlan(plan);
   const normalizedPolicy = normalizePolicy(policy);
@@ -67,6 +65,7 @@ function normalizePolicy(policy) {
   return {
     allowedScopes: new Set(normalizeList(policy.allowedScopes)),
     allowedDataClasses: new Set(normalizeList(policy.allowedDataClasses ?? policy.allowedData)),
+    allowedReadActions: new Set(normalizeList(policy.allowedReadActions)),
     allowedWriteActions: new Set(normalizeList(policy.allowedWriteActions)),
     requireApprovalForWrites: Boolean(policy.requireApprovalForWrites)
   };
@@ -85,15 +84,19 @@ function auditActions(actions, policy) {
   if (actions.length === 0) return [{ severity: "warn", message: "No actions listed in plan." }];
   const findings = [];
   for (const action of actions) {
-    if (WRITE_ACTIONS.has(action) && !policy.allowedWriteActions.has(action)) {
-      findings.push({ severity: "block", message: `Write action is not allowed by policy: ${action}` });
+    const isRead = policy.allowedReadActions.has(action);
+    const isWrite = policy.allowedWriteActions.has(action);
+    if (!isRead && !isWrite) {
+      findings.push({ severity: "block", message: `Action is not allowed by policy: ${action}` });
+    } else if (isRead && isWrite) {
+      findings.push({ severity: "block", message: `Action has conflicting policy classifications: ${action}` });
     }
   }
   return findings;
 }
 
 function auditApprovals(plan, policy) {
-  const hasWrite = plan.actions.some((action) => WRITE_ACTIONS.has(action));
+  const hasWrite = plan.actions.some((action) => policy.allowedWriteActions.has(action));
   if (hasWrite && policy.requireApprovalForWrites && !plan.approval) {
     return [{ severity: "block", message: "Write action requested without approval evidence." }];
   }
