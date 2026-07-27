@@ -16,17 +16,22 @@ const plan = {
 const basePolicy = {
   allowedScopes: ["contacts.read"],
   allowedDataClasses: ["contact"],
+  allowedReadActions: ["read"],
   allowedWriteActions: ["update"]
 };
 
-async function runAudit(t, requireApprovalForWrites) {
+async function runAudit(t, requireApprovalForWrites, overrides = {}) {
   const directory = await mkdtemp(join(tmpdir(), "connector-scope-audit-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const planPath = join(directory, "plan.json");
   const policyPath = join(directory, "policy.json");
   await Promise.all([
-    writeFile(planPath, JSON.stringify(plan)),
-    writeFile(policyPath, JSON.stringify({ ...basePolicy, requireApprovalForWrites }))
+    writeFile(planPath, JSON.stringify({ ...plan, ...overrides.plan })),
+    writeFile(policyPath, JSON.stringify({
+      ...basePolicy,
+      requireApprovalForWrites,
+      ...overrides.policy
+    }))
   ]);
   return spawnSync(process.execPath, [cli, "audit", planPath, "--policy", policyPath, "--json"], {
     encoding: "utf8"
@@ -43,4 +48,18 @@ test("CLI exits 0 for an unapproved write when approval is not required", async 
   const result = await runAudit(t, false);
   assert.equal(result.status, 0);
   assert.equal(JSON.parse(result.stdout).decision, "pass");
+});
+
+test("CLI returns block JSON and exit status 2 for an unclassified action", async (t) => {
+  const result = await runAudit(t, true, {
+    plan: { actions: ["archive"] }
+  });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stderr, "");
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some((finding) =>
+    finding.message === "Action is not allowed by policy: archive"
+  ));
 });

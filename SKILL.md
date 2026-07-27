@@ -7,7 +7,8 @@ Use this skill before an agent performs or requests approval for connector-backe
 ## Required Tools Or Inputs
 
 - A connector action plan JSON file.
-- A local policy JSON file listing allowed scopes, data classes, write actions, and required approvals.
+- A local policy JSON file listing allowed scopes, data classes, read actions,
+  write actions, and required approvals.
 - Local shell access to run `connector-scope-audit audit`.
 
 ## Side-Effect Boundaries
@@ -20,8 +21,10 @@ Write actions require nonempty explicit approval evidence when the policy sets
 `requireApprovalForWrites` to `true`; a missing approval then produces a
 `block` decision and CLI exit status 2. When that setting is `false`, missing
 approval evidence does not affect the decision. Unknown scopes, unknown data
-classes, and write actions not allowed by policy also block execution until a
-human resolves them.
+classes, and actions not classified exactly once in `allowedReadActions` or
+`allowedWriteActions` also block execution until a human resolves them. Every
+action classified in `allowedWriteActions`, including connector-specific action
+names, is subject to write approval requirements.
 
 ## Examples
 

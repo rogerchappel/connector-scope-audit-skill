@@ -1,6 +1,7 @@
 {
   "allowedScopes": ["contacts.read", "contacts.write"],
   "allowedDataClasses": ["contact", "note"],
+  "allowedReadActions": ["read"],
   "allowedWriteActions": ["update", "comment"],
   "requireApprovalForWrites": true
 }
