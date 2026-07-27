@@ -22,4 +22,5 @@ The tool has no side effects beyond stdout and stderr.
 
 - Missing files exit non-zero.
 - Invalid JSON exits non-zero.
-- Unknown scopes, data classes, or write actions create block findings.
+- Unknown scopes, data classes, or actions create block findings. Policies must
+  classify each permitted action exactly once as read-only or write.

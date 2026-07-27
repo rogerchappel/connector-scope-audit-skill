@@ -25,7 +25,7 @@ Provide a local CLI and library that classify connector action plans as `pass`, 
 
 - Read plan and policy JSON.
 - Normalize scopes, data classes, and actions.
-- Block unknown scopes/data/write actions.
+- Block unknown scopes/data/actions and conflicting read/write classifications.
 - Warn when approval evidence is missing for writes.
 - Render Markdown and JSON reports.
 
