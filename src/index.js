@@ -36,7 +36,7 @@ export function renderMarkdown(report) {
     "",
     `- Source: ${report.source}`,
     `- Policy: ${report.policySource}`,
-    `- Connector: ${report.connector || "unspecified"}`,
+    `- Connector: ${report.connector || "missing (required)"}`,
     `- Decision: ${report.decision}`,
     "",
     "## Plan",

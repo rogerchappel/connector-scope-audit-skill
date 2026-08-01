@@ -42,6 +42,7 @@ test("blocks an otherwise valid plan without a connector identity", () => {
     finding.severity === "block"
     && finding.message === "Connector identity is required."
   ));
+  assert.match(renderMarkdown(report), /Connector: missing \(required\)/);
 });
 
 test("blocks missing write approval when policy requires it", () => {
