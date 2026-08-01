@@ -28,6 +28,23 @@ test("passes approved in-policy write plan", () => {
   assert.equal(report.decision, "pass");
 });
 
+test("blocks an otherwise valid plan without a connector identity", () => {
+  const report = auditPlan({
+    connector: "   ",
+    scopes: ["contacts.read"],
+    dataClasses: ["contact"],
+    actions: ["read"]
+  }, policy);
+
+  assert.equal(report.connector, "");
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some((finding) =>
+    finding.severity === "block"
+    && finding.message === "Connector identity is required."
+  ));
+  assert.match(renderMarkdown(report), /Connector: missing \(required\)/);
+});
+
 test("blocks missing write approval when policy requires it", () => {
   const report = auditPlan({
     connector: "crm",
