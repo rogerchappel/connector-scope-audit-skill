@@ -63,3 +63,19 @@ test("CLI returns block JSON and exit status 2 for an unclassified action", asyn
     finding.message === "Action is not allowed by policy: archive"
   ));
 });
+
+test("CLI returns block JSON and exit status 2 when connector identity is missing", async (t) => {
+  const result = await runAudit(t, false, {
+    plan: { connector: "  ", actions: ["read"] }
+  });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stderr, "");
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.connector, "");
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some((finding) =>
+    finding.severity === "block"
+    && finding.message === "Connector identity is required."
+  ));
+});
