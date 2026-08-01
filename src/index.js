@@ -2,16 +2,12 @@ export function auditPlan(plan, policy, options = {}) {
   const normalized = normalizePlan(plan);
   const normalizedPolicy = normalizePolicy(policy);
   const findings = [
+    ...auditConnector(normalized.connector),
     ...auditAllowed("scope", normalized.scopes, normalizedPolicy.allowedScopes),
     ...auditAllowed("data class", normalized.dataClasses, normalizedPolicy.allowedDataClasses),
     ...auditActions(normalized.actions, normalizedPolicy),
     ...auditApprovals(normalized, normalizedPolicy)
   ];
-
-  findings.unshift({
-    severity: "info",
-    message: `Connector: ${normalized.connector || "unspecified"}`
-  });
 
   return {
     source: options.source ?? "inline",
@@ -25,6 +21,13 @@ export function auditPlan(plan, policy, options = {}) {
     findings,
     evidence: buildEvidence(findings)
   };
+}
+
+function auditConnector(connector) {
+  if (!connector) {
+    return [{ severity: "block", message: "Connector identity is required." }];
+  }
+  return [{ severity: "info", message: `Connector: ${connector}` }];
 }
 
 export function renderMarkdown(report) {
