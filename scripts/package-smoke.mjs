@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-import { execFileSync } from "node:child_process";
+import assert from "node:assert/strict";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const output = execFileSync("npm", ["pack", "--dry-run", "--json"], { encoding: "utf8" });
 const [pack] = JSON.parse(output);
@@ -26,3 +30,28 @@ if (missing.length) {
 }
 
 console.log(`package smoke ok: ${pack.filename} includes ${pack.files.length} files`);
+
+const directory = mkdtempSync(join(tmpdir(), "connector-scope-audit-pack-"));
+try {
+  const packed = execFileSync("npm", ["pack", "--pack-destination", directory, "--silent"], {
+    encoding: "utf8"
+  }).trim();
+  execFileSync("tar", ["-xzf", join(directory, packed), "-C", directory]);
+  const packedCli = join(directory, "package", "bin", "connector-scope-audit.js");
+  const result = spawnSync(process.execPath, [
+    packedCli,
+    "audit",
+    "missing-plan.json",
+    "--policy",
+    "first.json",
+    "--policy",
+    "second.json"
+  ], { encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /--policy may only be specified once\./);
+  assert.match(result.stderr, /^Usage: /m);
+  assert.doesNotMatch(result.stderr, /ENOENT/);
+  console.log("packed CLI rejects malformed option grammar before file access");
+} finally {
+  rmSync(directory, { recursive: true, force: true });
+}

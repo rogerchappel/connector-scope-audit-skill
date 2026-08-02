@@ -38,6 +38,43 @@ async function runAudit(t, requireApprovalForWrites, overrides = {}) {
   });
 }
 
+function runCli(args) {
+  return spawnSync(process.execPath, [cli, ...args], { encoding: "utf8" });
+}
+
+const usage = "Usage: connector-scope-audit audit <plan.json> --policy <policy.json> [--json]\n";
+
+for (const malformed of [
+  {
+    name: "a repeated --policy option",
+    args: ["audit", "missing-plan.json", "--policy", "first.json", "--policy", "second.json"],
+    message: "--policy may only be specified once.\n"
+  },
+  {
+    name: "a repeated --json option",
+    args: ["audit", "missing-plan.json", "--policy", "policy.json", "--json", "--json"],
+    message: "--json may only be specified once.\n"
+  },
+  {
+    name: "a missing --policy value",
+    args: ["audit", "missing-plan.json", "--policy", "--json"],
+    message: "--policy requires a policy JSON path.\n"
+  },
+  {
+    name: "an omitted --policy option",
+    args: ["audit", "missing-plan.json", "--json"],
+    message: "--policy is required.\n"
+  }
+]) {
+  test(`CLI rejects ${malformed.name} before reading files`, () => {
+    const result = runCli(malformed.args);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, "");
+    assert.equal(result.stderr, malformed.message + usage);
+    assert.doesNotMatch(result.stderr, /ENOENT/);
+  });
+}
+
 test("CLI exits 2 for an unapproved write when approval is required", async (t) => {
   const result = await runAudit(t, true);
   assert.equal(result.status, 2);
