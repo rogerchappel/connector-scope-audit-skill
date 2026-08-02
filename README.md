@@ -22,6 +22,12 @@ npm run release:check
 connector-scope-audit audit <plan.json> --policy <policy.json> [--json]
 ```
 
+The `audit` command accepts exactly one plan path, exactly one `--policy`
+option with a following policy path, and at most one `--json` flag. Options may
+appear in either order after the plan path. Repeated options, a missing policy
+value, and unknown arguments are usage errors; they exit with status `1` and
+print the accepted grammar without trying to read either JSON file.
+
 Plans must identify the connector with a nonempty name and describe scopes, data classes, actions, and any approval note. A missing or whitespace-only connector identity is blocked so an otherwise valid plan cannot be mistaken for a connector-specific audit. Policies classify every permitted action in either `allowedReadActions` or `allowedWriteActions`, in addition to defining allowed scopes, data classes, and whether approval is required for writes.
 
 Action evaluation is fail closed: an action omitted from both lists is blocked, as is an action placed in both lists. Names are not assumed to be safe based on a built-in action vocabulary. Any action in `allowedWriteActions` participates in `requireApprovalForWrites` enforcement, including connector-specific actions such as `archive`.
