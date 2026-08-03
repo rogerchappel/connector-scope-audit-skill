@@ -45,6 +45,42 @@ test("blocks an otherwise valid plan without a connector identity", () => {
   assert.match(renderMarkdown(report), /Connector: missing \(required\)/);
 });
 
+for (const [name, connector] of [
+  ["object", { name: "crm" }],
+  ["array", ["crm"]],
+  ["number", 42],
+  ["boolean", true],
+  ["null", null]
+]) {
+  test(`blocks a ${name} connector identity instead of coercing it`, () => {
+    const report = auditPlan({
+      connector,
+      scopes: ["contacts.read"],
+      dataClasses: ["contact"],
+      actions: ["read"]
+    }, policy);
+
+    assert.equal(report.connector, "");
+    assert.equal(report.decision, "block");
+    assert.ok(report.findings.some((finding) =>
+      finding.severity === "block"
+      && finding.message === "Connector identity must be a string."
+    ));
+  });
+}
+
+test("trims a valid string connector identity", () => {
+  const report = auditPlan({
+    connector: "  crm  ",
+    scopes: ["contacts.read"],
+    dataClasses: ["contact"],
+    actions: ["read"]
+  }, policy);
+
+  assert.equal(report.connector, "crm");
+  assert.equal(report.decision, "pass");
+});
+
 test("blocks missing write approval when policy requires it", () => {
   const report = auditPlan({
     connector: "crm",
@@ -57,6 +93,44 @@ test("blocks missing write approval when policy requires it", () => {
     finding.severity === "block"
     && finding.message === "Write action requested without approval evidence."
   ));
+});
+
+for (const [name, approval] of [
+  ["object", { ticket: "APP-42" }],
+  ["array", ["APP-42"]],
+  ["number", 42],
+  ["boolean", true],
+  ["null", null]
+]) {
+  test(`${name} approval evidence does not satisfy a required approval`, () => {
+    const report = auditPlan({
+      connector: "crm",
+      scopes: ["contacts.write"],
+      dataClasses: ["contact"],
+      actions: ["update"],
+      approval
+    }, policy);
+
+    assert.equal(report.approval, "");
+    assert.equal(report.decision, "block");
+    assert.ok(report.findings.some((finding) =>
+      finding.severity === "block"
+      && finding.message === "Write action requested without approval evidence."
+    ));
+  });
+}
+
+test("trims valid string approval evidence", () => {
+  const report = auditPlan({
+    connector: "crm",
+    scopes: ["contacts.write"],
+    dataClasses: ["contact"],
+    actions: ["update"],
+    approval: "  Approved in APP-42.  "
+  }, policy);
+
+  assert.equal(report.approval, "Approved in APP-42.");
+  assert.equal(report.decision, "pass");
 });
 
 test("allows missing write approval when policy does not require it", () => {

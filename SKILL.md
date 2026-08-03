@@ -6,7 +6,7 @@ Use this skill before an agent performs or requests approval for connector-backe
 
 ## Required Tools Or Inputs
 
-- A connector action plan JSON file with a nonempty connector identity.
+- A connector action plan JSON file with a nonempty string connector identity.
 - A local policy JSON file listing allowed scopes, data classes, read actions,
   write actions, and required approvals.
 - Local shell access to run `connector-scope-audit audit`.
@@ -26,6 +26,13 @@ classes, and actions not classified exactly once in `allowedReadActions` or
 action classified in `allowedWriteActions`, including connector-specific action
 names, is subject to write approval requirements. A missing or whitespace-only
 connector identity also blocks the audit and produces CLI exit status 2.
+
+Connector identity and approval evidence use this JSON grammar: each value must
+be a string, surrounding whitespace is trimmed, and the trimmed value must be
+nonempty to count as evidence. Objects, arrays, numbers, booleans, and `null`
+are not converted to strings. A wrong-type connector value blocks the audit; a
+wrong-type approval value is treated as absent and cannot satisfy required
+approval.
 
 ## Examples
 

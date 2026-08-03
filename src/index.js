@@ -2,7 +2,7 @@ export function auditPlan(plan, policy, options = {}) {
   const normalized = normalizePlan(plan);
   const normalizedPolicy = normalizePolicy(policy);
   const findings = [
-    ...auditConnector(normalized.connector),
+    ...auditConnector(normalized.connector, plan.connector),
     ...auditAllowed("scope", normalized.scopes, normalizedPolicy.allowedScopes),
     ...auditAllowed("data class", normalized.dataClasses, normalizedPolicy.allowedDataClasses),
     ...auditActions(normalized.actions, normalizedPolicy),
@@ -23,7 +23,10 @@ export function auditPlan(plan, policy, options = {}) {
   };
 }
 
-function auditConnector(connector) {
+function auditConnector(connector, input) {
+  if (input !== undefined && typeof input !== "string") {
+    return [{ severity: "block", message: "Connector identity must be a string." }];
+  }
   if (!connector) {
     return [{ severity: "block", message: "Connector identity is required." }];
   }
@@ -56,12 +59,16 @@ export function renderMarkdown(report) {
 
 export function normalizePlan(plan) {
   return {
-    connector: String(plan.connector ?? "").trim(),
+    connector: normalizeString(plan.connector),
     scopes: normalizeList(plan.scopes),
     dataClasses: normalizeList(plan.dataClasses ?? plan.data),
     actions: normalizeList(plan.actions),
-    approval: String(plan.approval ?? plan.approvalNote ?? "").trim()
+    approval: normalizeString(plan.approval ?? plan.approvalNote)
   };
+}
+
+function normalizeString(value) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function normalizePolicy(policy) {
