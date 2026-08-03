@@ -116,3 +116,33 @@ test("CLI returns block JSON and exit status 2 when connector identity is missin
     && finding.message === "Connector identity is required."
   ));
 });
+
+test("CLI returns an actionable block for a wrong-type connector identity", async (t) => {
+  const result = await runAudit(t, false, {
+    plan: { connector: { name: "crm" }, actions: ["read"] }
+  });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stderr, "");
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.connector, "");
+  assert.ok(report.findings.some((finding) =>
+    finding.severity === "block"
+    && finding.message === "Connector identity must be a string."
+  ));
+});
+
+test("CLI does not accept wrong-type approval evidence", async (t) => {
+  const result = await runAudit(t, true, {
+    plan: { approval: ["APP-42"] }
+  });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stderr, "");
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.approval, "");
+  assert.ok(report.findings.some((finding) =>
+    finding.severity === "block"
+    && finding.message === "Write action requested without approval evidence."
+  ));
+});
