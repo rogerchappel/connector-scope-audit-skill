@@ -26,8 +26,10 @@ async function runAudit(t, requireApprovalForWrites, overrides = {}) {
   const planPath = join(directory, "plan.json");
   const policyPath = join(directory, "policy.json");
   await Promise.all([
-    writeFile(planPath, JSON.stringify({ ...plan, ...overrides.plan })),
-    writeFile(policyPath, JSON.stringify({
+    writeFile(planPath, JSON.stringify(Object.hasOwn(overrides, "planRoot")
+      ? overrides.planRoot
+      : { ...plan, ...overrides.plan })),
+    writeFile(policyPath, JSON.stringify(Object.hasOwn(overrides, "policyRoot") ? overrides.policyRoot : {
       ...basePolicy,
       requireApprovalForWrites,
       ...overrides.policy
@@ -145,4 +147,31 @@ test("CLI does not accept wrong-type approval evidence", async (t) => {
     finding.severity === "block"
     && finding.message === "Write action requested without approval evidence."
   ));
+});
+
+test("CLI emits block JSON for null plan roots", async (t) => {
+  const result = await runAudit(t, false, { planRoot: null });
+  assert.equal(result.status, 2);
+  assert.equal(result.stderr, "");
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some((finding) => finding.message === "Plan must be a JSON object."));
+});
+
+test("CLI emits block markdown for malformed list fields", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "connector-scope-audit-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const planPath = join(directory, "plan.json");
+  const policyPath = join(directory, "policy.json");
+  await Promise.all([
+    writeFile(planPath, JSON.stringify({ ...plan, scopes: { bad: true }, actions: ["read"] })),
+    writeFile(policyPath, JSON.stringify({ ...basePolicy, allowedScopes: [{ bad: true }] }))
+  ]);
+
+  const result = runCli(["audit", planPath, "--policy", policyPath]);
+  assert.equal(result.status, 2);
+  assert.equal(result.stderr, "");
+  assert.match(result.stdout, /Decision: block/);
+  assert.match(result.stdout, /BLOCK: Plan scopes must be a string or an array of strings\./);
+  assert.match(result.stdout, /BLOCK: Policy allowed scopes must contain only strings\./);
 });

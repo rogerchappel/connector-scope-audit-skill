@@ -197,6 +197,51 @@ test("blocks unknown scope and write action", () => {
   assert.ok(report.findings.some((finding) => finding.message.includes("deals.delete")));
 });
 
+test("blocks non-object plan and policy roots without throwing", () => {
+  for (const [plan, suppliedPolicy, message] of [
+    [null, policy, "Plan must be a JSON object."],
+    [{}, null, "Policy must be a JSON object."],
+    [[], policy, "Plan must be a JSON object."],
+    [{}, [], "Policy must be a JSON object."]
+  ]) {
+    const report = auditPlan(plan, suppliedPolicy);
+    assert.equal(report.decision, "block");
+    assert.ok(report.findings.some((finding) => finding.message === message));
+    assert.match(renderMarkdown(report), new RegExp(message.replaceAll(".", "\\.")));
+  }
+});
+
+test("does not coerce malformed plan and policy identifiers into a pass", () => {
+  const invalidIdentifier = { bad: true };
+  const report = auditPlan({
+    connector: "crm",
+    scopes: invalidIdentifier,
+    dataClasses: [invalidIdentifier],
+    actions: [invalidIdentifier]
+  }, {
+    allowedScopes: [invalidIdentifier],
+    allowedDataClasses: invalidIdentifier,
+    allowedReadActions: [invalidIdentifier],
+    allowedWriteActions: [],
+    requireApprovalForWrites: false
+  });
+
+  assert.equal(report.decision, "block");
+  assert.deepEqual(report.scopes, []);
+  assert.deepEqual(report.dataClasses, []);
+  assert.deepEqual(report.actions, []);
+  for (const message of [
+    "Plan scopes must be a string or an array of strings.",
+    "Plan data classes must contain only strings.",
+    "Plan actions must contain only strings.",
+    "Policy allowed scopes must contain only strings.",
+    "Policy allowed data classes must be a string or an array of strings.",
+    "Policy allowed read actions must contain only strings."
+  ]) {
+    assert.ok(report.findings.some((finding) => finding.message === message));
+  }
+});
+
 test("renders markdown report", () => {
   const report = auditPlan({ connector: "crm", scopes: ["contacts.read"], dataClasses: ["contact"], actions: ["read"] }, policy);
   assert.match(renderMarkdown(report), /Connector Scope Audit/);

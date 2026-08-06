@@ -22,5 +22,8 @@ The tool has no side effects beyond stdout and stderr.
 
 - Missing files exit non-zero.
 - Invalid JSON exits non-zero.
+- Valid JSON with a non-object plan or policy root produces a block report.
+- Identifier fields accept a string or an array of strings; wrong-type fields
+  and non-string array members produce block findings without coercion.
 - Unknown scopes, data classes, or actions create block findings. Policies must
   classify each permitted action exactly once as read-only or write.

@@ -39,6 +39,18 @@ classify every permitted action in either `allowedReadActions` or
 `allowedWriteActions`, in addition to defining allowed scopes, data classes,
 and whether approval is required for writes.
 
+The plan and policy roots must be JSON objects. Identifier-list fields accept
+either one JSON string or an array containing only JSON strings:
+`scopes`, `dataClasses` (or `data`), and `actions` in a plan; and
+`allowedScopes`, `allowedDataClasses` (or `allowedData`),
+`allowedReadActions`, and `allowedWriteActions` in a policy. Empty or omitted
+lists are allowed and produce the normal missing-list findings. Explicit
+`null`, objects, numbers, booleans, and arrays containing non-string members
+are malformed and produce blocking findings; they are never string-coerced.
+`requireApprovalForWrites`, when provided, must be a JSON boolean. These schema
+findings are included in both Markdown and `--json` reports and exit with
+status `2`.
+
 Action evaluation is fail closed: an action omitted from both lists is blocked, as is an action placed in both lists. Names are not assumed to be safe based on a built-in action vocabulary. Any action in `allowedWriteActions` participates in `requireApprovalForWrites` enforcement, including connector-specific actions such as `archive`.
 
 ```json
