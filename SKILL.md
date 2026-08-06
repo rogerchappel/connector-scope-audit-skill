@@ -34,6 +34,13 @@ are not converted to strings. A wrong-type connector value blocks the audit; a
 wrong-type approval value is treated as absent and cannot satisfy required
 approval.
 
+Both JSON roots must be objects. Plan identifier fields (`scopes`,
+`dataClasses`/`data`, and `actions`) and policy allowlists (`allowedScopes`,
+`allowedDataClasses`/`allowedData`, `allowedReadActions`, and
+`allowedWriteActions`) accept one string or an array containing only strings.
+Other explicit values produce blocking schema findings instead of being
+coerced. `requireApprovalForWrites`, when present, must be a boolean.
+
 ## Examples
 
 ```sh
