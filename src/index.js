@@ -1,8 +1,11 @@
 export function auditPlan(plan, policy, options = {}) {
-  const normalized = normalizePlan(plan);
-  const normalizedPolicy = normalizePolicy(policy);
+  const planInput = isRecord(plan) ? plan : {};
+  const policyInput = isRecord(policy) ? policy : {};
+  const normalized = normalizePlan(planInput);
+  const normalizedPolicy = normalizePolicy(policyInput);
   const findings = [
-    ...auditConnector(normalized.connector, plan.connector),
+    ...auditInputSchema(plan, policy),
+    ...auditConnector(normalized.connector, planInput.connector),
     ...auditAllowed("scope", normalized.scopes, normalizedPolicy.allowedScopes),
     ...auditAllowed("data class", normalized.dataClasses, normalizedPolicy.allowedDataClasses),
     ...auditActions(normalized.actions, normalizedPolicy),
@@ -58,12 +61,13 @@ export function renderMarkdown(report) {
 }
 
 export function normalizePlan(plan) {
+  const input = isRecord(plan) ? plan : {};
   return {
-    connector: normalizeString(plan.connector),
-    scopes: normalizeList(plan.scopes),
-    dataClasses: normalizeList(plan.dataClasses ?? plan.data),
-    actions: normalizeList(plan.actions),
-    approval: normalizeString(plan.approval ?? plan.approvalNote)
+    connector: normalizeString(input.connector),
+    scopes: normalizeList(input.scopes),
+    dataClasses: normalizeList(input.dataClasses ?? input.data),
+    actions: normalizeList(input.actions),
+    approval: normalizeString(input.approval ?? input.approvalNote)
   };
 }
 
@@ -77,8 +81,49 @@ function normalizePolicy(policy) {
     allowedDataClasses: new Set(normalizeList(policy.allowedDataClasses ?? policy.allowedData)),
     allowedReadActions: new Set(normalizeList(policy.allowedReadActions)),
     allowedWriteActions: new Set(normalizeList(policy.allowedWriteActions)),
-    requireApprovalForWrites: Boolean(policy.requireApprovalForWrites)
+    requireApprovalForWrites: policy.requireApprovalForWrites === true
   };
+}
+
+function auditInputSchema(plan, policy) {
+  const findings = [];
+  if (!isRecord(plan)) findings.push(block("Plan must be a JSON object."));
+  if (!isRecord(policy)) findings.push(block("Policy must be a JSON object."));
+
+  if (isRecord(plan)) {
+    validateListField(findings, "Plan scopes", plan.scopes);
+    validateListField(findings, "Plan data classes", plan.dataClasses ?? plan.data);
+    validateListField(findings, "Plan actions", plan.actions);
+  }
+  if (isRecord(policy)) {
+    validateListField(findings, "Policy allowed scopes", policy.allowedScopes);
+    validateListField(findings, "Policy allowed data classes", policy.allowedDataClasses ?? policy.allowedData);
+    validateListField(findings, "Policy allowed read actions", policy.allowedReadActions);
+    validateListField(findings, "Policy allowed write actions", policy.allowedWriteActions);
+    if (policy.requireApprovalForWrites !== undefined
+      && typeof policy.requireApprovalForWrites !== "boolean") {
+      findings.push(block("Policy requireApprovalForWrites must be a boolean."));
+    }
+  }
+  return findings;
+}
+
+function validateListField(findings, label, value) {
+  if (value === undefined) return;
+  if (typeof value === "string") return;
+  if (!Array.isArray(value)) {
+    findings.push(block(`${label} must be a string or an array of strings.`));
+  } else if (value.some((item) => typeof item !== "string")) {
+    findings.push(block(`${label} must contain only strings.`));
+  }
+}
+
+function block(message) {
+  return { severity: "block", message };
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function auditAllowed(label, requested, allowed) {
@@ -138,7 +183,10 @@ function renderList(label, values) {
 }
 
 function normalizeList(value) {
-  if (!value) return [];
+  if (typeof value !== "string" && !Array.isArray(value)) return [];
   const list = Array.isArray(value) ? value : [value];
-  return [...new Set(list.map((item) => String(item).toLowerCase().trim()).filter(Boolean))];
+  return [...new Set(list
+    .filter((item) => typeof item === "string")
+    .map((item) => item.toLowerCase().trim())
+    .filter(Boolean))];
 }
