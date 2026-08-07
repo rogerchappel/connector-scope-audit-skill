@@ -40,6 +40,11 @@ Both JSON roots must be objects. Plan identifier fields (`scopes`,
 `allowedWriteActions`) accept one string or an array containing only strings.
 Other explicit values produce blocking schema findings instead of being
 coerced. `requireApprovalForWrites`, when present, must be a boolean.
+If both names in an alias pair are supplied, both values are validated and
+must be equivalent after normalization or the audit blocks. Plan data-class
+aliases are combined before allowlist evaluation, preventing either field from
+hiding a disallowed class. This also applies to policy
+`allowedDataClasses`/`allowedData` and plan `approval`/`approvalNote`.
 
 ## Examples
 

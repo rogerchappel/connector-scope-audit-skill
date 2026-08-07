@@ -103,6 +103,16 @@ test("CLI returns block JSON and exit status 2 for an unclassified action", asyn
   ));
 });
 
+test("CLI blocks a disallowed data class in a simultaneous alias", async (t) => {
+  const result = await runAudit(t, false, {
+    plan: { actions: ["read"], dataClasses: ["contact"], data: ["secret"] }
+  });
+  assert.equal(result.status, 2);
+  const report = JSON.parse(result.stdout);
+  assert.ok(report.findings.some(({ message }) =>
+    message === "Unknown or disallowed data class: secret"));
+});
+
 test("CLI returns block JSON and exit status 2 when connector identity is missing", async (t) => {
   const result = await runAudit(t, false, {
     plan: { connector: "  ", actions: ["read"] }

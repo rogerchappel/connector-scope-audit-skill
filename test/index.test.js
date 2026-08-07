@@ -17,6 +17,52 @@ test("normalizes plan arrays and aliases", () => {
   assert.deepEqual(plan.actions, ["update"]);
 });
 
+test("blocks a disallowed data class hidden behind a simultaneous alias", () => {
+  const report = auditPlan({
+    connector: "crm", scopes: ["contacts.read"], actions: ["read"],
+    dataClasses: ["contact"], data: ["secret"]
+  }, policy);
+  assert.deepEqual(report.dataClasses, ["contact", "secret"]);
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some(({ message }) => message === "Plan dataClasses conflicts with data."));
+  assert.ok(report.findings.some(({ message }) => message === "Unknown or disallowed data class: secret"));
+});
+
+test("accepts matching simultaneous aliases after normalization", () => {
+  const report = auditPlan({
+    connector: "crm", scopes: ["contacts.write"], actions: ["update"],
+    dataClasses: ["Contact"], data: " contact ",
+    approval: " APP-42 ", approvalNote: "APP-42"
+  }, { ...policy, allowedData: ["CONTACT"] });
+  assert.equal(report.decision, "pass");
+});
+
+test("blocks conflicting policy and approval aliases", () => {
+  const report = auditPlan({
+    connector: "crm", scopes: ["contacts.write"], actions: ["update"],
+    dataClasses: ["contact"], approval: "APP-42", approvalNote: "APP-99"
+  }, { ...policy, allowedData: ["secret"] });
+  assert.equal(report.decision, "block");
+  for (const message of [
+    "Policy allowedDataClasses conflicts with allowedData.",
+    "Plan approval conflicts with approvalNote."
+  ]) assert.ok(report.findings.some((finding) => finding.message === message));
+});
+
+test("validates both members of every simultaneous alias pair", () => {
+  const report = auditPlan({
+    connector: "crm", scopes: ["contacts.write"], actions: ["update"],
+    dataClasses: ["contact"], data: { hidden: "secret" },
+    approval: "APP-42", approvalNote: ["APP-42"]
+  }, { ...policy, allowedData: { hidden: "secret" } });
+  assert.equal(report.decision, "block");
+  for (const message of [
+    "Plan data must be a string or an array of strings.",
+    "Plan approvalNote must be a string.",
+    "Policy allowed data must be a string or an array of strings."
+  ]) assert.ok(report.findings.some((finding) => finding.message === message));
+});
+
 test("passes approved in-policy write plan", () => {
   const report = auditPlan({
     connector: "crm",

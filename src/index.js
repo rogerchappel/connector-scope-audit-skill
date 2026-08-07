@@ -65,9 +65,9 @@ export function normalizePlan(plan) {
   return {
     connector: normalizeString(input.connector),
     scopes: normalizeList(input.scopes),
-    dataClasses: normalizeList(input.dataClasses ?? input.data),
+    dataClasses: normalizeAliasedList(input.dataClasses, input.data),
     actions: normalizeList(input.actions),
-    approval: normalizeString(input.approval ?? input.approvalNote)
+    approval: normalizeAliasedString(input.approval, input.approvalNote)
   };
 }
 
@@ -78,7 +78,7 @@ function normalizeString(value) {
 function normalizePolicy(policy) {
   return {
     allowedScopes: new Set(normalizeList(policy.allowedScopes)),
-    allowedDataClasses: new Set(normalizeList(policy.allowedDataClasses ?? policy.allowedData)),
+    allowedDataClasses: new Set(normalizeAliasedList(policy.allowedDataClasses, policy.allowedData)),
     allowedReadActions: new Set(normalizeList(policy.allowedReadActions)),
     allowedWriteActions: new Set(normalizeList(policy.allowedWriteActions)),
     requireApprovalForWrites: policy.requireApprovalForWrites === true
@@ -92,12 +92,16 @@ function auditInputSchema(plan, policy) {
 
   if (isRecord(plan)) {
     validateListField(findings, "Plan scopes", plan.scopes);
-    validateListField(findings, "Plan data classes", plan.dataClasses ?? plan.data);
+    validateAliasedList(findings, "Plan data classes", plan.dataClasses,
+      "Plan data", plan.data, "Plan dataClasses conflicts with data.");
     validateListField(findings, "Plan actions", plan.actions);
+    validateAliasedString(findings, "Plan approval", plan.approval, "approvalNote", plan.approvalNote);
   }
   if (isRecord(policy)) {
     validateListField(findings, "Policy allowed scopes", policy.allowedScopes);
-    validateListField(findings, "Policy allowed data classes", policy.allowedDataClasses ?? policy.allowedData);
+    validateAliasedList(findings, "Policy allowed data classes", policy.allowedDataClasses,
+      "Policy allowed data", policy.allowedData,
+      "Policy allowedDataClasses conflicts with allowedData.");
     validateListField(findings, "Policy allowed read actions", policy.allowedReadActions);
     validateListField(findings, "Policy allowed write actions", policy.allowedWriteActions);
     if (policy.requireApprovalForWrites !== undefined
@@ -108,6 +112,30 @@ function auditInputSchema(plan, policy) {
   return findings;
 }
 
+function validateAliasedList(findings, canonicalLabel, canonical, aliasLabel, alias, conflictMessage) {
+  validateListField(findings, canonicalLabel, canonical);
+  validateListField(findings, aliasLabel, alias);
+  if (canonical !== undefined && alias !== undefined
+    && isValidList(canonical) && isValidList(alias)
+    && !sameValues(normalizeList(canonical), normalizeList(alias))) {
+    findings.push(block(conflictMessage));
+  }
+}
+
+function validateAliasedString(findings, canonicalLabel, canonical, aliasLabel, alias) {
+  if (canonical !== undefined && typeof canonical !== "string") {
+    findings.push(block(`${canonicalLabel} must be a string.`));
+  }
+  if (alias !== undefined && typeof alias !== "string") {
+    findings.push(block(`Plan ${aliasLabel} must be a string.`));
+  }
+  if (canonical !== undefined && alias !== undefined
+    && typeof canonical === "string" && typeof alias === "string"
+    && normalizeString(canonical) !== normalizeString(alias)) {
+    findings.push(block(`${canonicalLabel} conflicts with ${aliasLabel}.`));
+  }
+}
+
 function validateListField(findings, label, value) {
   if (value === undefined) return;
   if (typeof value === "string") return;
@@ -116,6 +144,15 @@ function validateListField(findings, label, value) {
   } else if (value.some((item) => typeof item !== "string")) {
     findings.push(block(`${label} must contain only strings.`));
   }
+}
+
+function isValidList(value) {
+  return typeof value === "string"
+    || (Array.isArray(value) && value.every((item) => typeof item === "string"));
+}
+
+function sameValues(left, right) {
+  return left.length === right.length && left.every((item) => right.includes(item));
 }
 
 function block(message) {
@@ -189,4 +226,13 @@ function normalizeList(value) {
     .filter((item) => typeof item === "string")
     .map((item) => item.toLowerCase().trim())
     .filter(Boolean))];
+}
+
+function normalizeAliasedList(canonical, alias) {
+  return normalizeList([...(isValidList(canonical) ? normalizeList(canonical) : []),
+    ...(isValidList(alias) ? normalizeList(alias) : [])]);
+}
+
+function normalizeAliasedString(canonical, alias) {
+  return normalizeString(canonical) || normalizeString(alias);
 }

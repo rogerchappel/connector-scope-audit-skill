@@ -51,6 +51,13 @@ are malformed and produce blocking findings; they are never string-coerced.
 findings are included in both Markdown and `--json` reports and exit with
 status `2`.
 
+When both a canonical field and its alias are present, both are validated.
+Equivalent values after trimming, lowercasing identifiers, and removing
+duplicates are accepted. Different values produce a blocking conflict finding;
+plan data-class values are also combined for allowlist evaluation so neither
+field can hide a disallowed class. The same conflict rule applies to policy
+`allowedDataClasses`/`allowedData` and plan `approval`/`approvalNote`.
+
 Action evaluation is fail closed: an action omitted from both lists is blocked, as is an action placed in both lists. Names are not assumed to be safe based on a built-in action vocabulary. Any action in `allowedWriteActions` participates in `requireApprovalForWrites` enforcement, including connector-specific actions such as `archive`.
 
 ```json
