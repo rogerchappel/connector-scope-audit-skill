@@ -112,8 +112,6 @@ The audit is policy-driven and cannot prove that a live connector will enforce t
 Run the same local gates that CI runs before opening a PR:
 
 ```bash
-npm run check --if-present
-npm run build --if-present
-npm test --if-present
-npm run smoke --if-present
+npm ci
+npm run release:check
 ```

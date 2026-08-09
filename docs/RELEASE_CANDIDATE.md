@@ -6,10 +6,11 @@ Ship.
 
 ## Verification
 
-- `npm test`
-- `npm run check`
-- `npm run build`
-- `npm run smoke`
+- `npm ci`
+- `npm run release:check`
+
+The release check runs package validation, the test suite, the fixture smoke
+test, and the packed-tarball smoke test used by CI.
 
 ## Known Limitations
 
