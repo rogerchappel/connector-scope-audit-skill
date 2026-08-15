@@ -288,6 +288,36 @@ test("does not coerce malformed plan and policy identifiers into a pass", () => 
   }
 });
 
+test("blocks blank members in every plan and policy list field", () => {
+  const report = auditPlan({
+    connector: "crm",
+    scopes: ["contacts.read", ""],
+    dataClasses: ["contact", "   "],
+    data: ["contact", "\t"],
+    actions: ["read", "\n"]
+  }, {
+    allowedScopes: ["contacts.read", " "],
+    allowedDataClasses: ["contact", ""],
+    allowedData: ["contact", "\t"],
+    allowedReadActions: ["read", "   "],
+    allowedWriteActions: ["update", "\n"],
+    requireApprovalForWrites: false
+  });
+
+  assert.equal(report.decision, "block");
+  assert.deepEqual(report.scopes, ["contacts.read"]);
+  assert.deepEqual(report.dataClasses, ["contact"]);
+  assert.deepEqual(report.actions, ["read"]);
+  for (const label of [
+    "Plan scopes", "Plan data classes", "Plan data", "Plan actions",
+    "Policy allowed scopes", "Policy allowed data classes", "Policy allowed data",
+    "Policy allowed read actions", "Policy allowed write actions"
+  ]) {
+    assert.ok(report.findings.some(({ message }) =>
+      message === `${label} must contain only non-empty strings.`));
+  }
+});
+
 test("renders markdown report", () => {
   const report = auditPlan({ connector: "crm", scopes: ["contacts.read"], dataClasses: ["contact"], actions: ["read"] }, policy);
   assert.match(renderMarkdown(report), /Connector Scope Audit/);
