@@ -138,11 +138,18 @@ function validateAliasedString(findings, canonicalLabel, canonical, aliasLabel, 
 
 function validateListField(findings, label, value) {
   if (value === undefined) return;
-  if (typeof value === "string") return;
+  if (typeof value === "string") {
+    if (value.trim() === "") {
+      findings.push(block(`${label} must be a non-empty string.`));
+    }
+    return;
+  }
   if (!Array.isArray(value)) {
     findings.push(block(`${label} must be a string or an array of strings.`));
   } else if (value.some((item) => typeof item !== "string")) {
     findings.push(block(`${label} must contain only strings.`));
+  } else if (value.some((item) => item.trim() === "")) {
+    findings.push(block(`${label} must contain only non-empty strings.`));
   }
 }
 
