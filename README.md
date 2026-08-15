@@ -40,13 +40,14 @@ classify every permitted action in either `allowedReadActions` or
 and whether approval is required for writes.
 
 The plan and policy roots must be JSON objects. Identifier-list fields accept
-either one JSON string or an array containing only JSON strings:
+either one non-empty JSON string or an array containing only non-empty JSON strings:
 `scopes`, `dataClasses` (or `data`), and `actions` in a plan; and
 `allowedScopes`, `allowedDataClasses` (or `allowedData`),
-`allowedReadActions`, and `allowedWriteActions` in a policy. Empty or omitted
-lists are allowed and produce the normal missing-list findings. Explicit
-`null`, objects, numbers, booleans, and arrays containing non-string members
-are malformed and produce blocking findings; they are never string-coerced.
+`allowedReadActions`, and `allowedWriteActions` in a policy. Empty arrays or
+omitted lists are allowed and produce the normal missing-list findings. Blank
+strings, `null`, objects, numbers, booleans, and arrays containing blank or
+non-string members are malformed and produce field-specific blocking findings;
+valid non-empty members are still normalized and deduplicated.
 `requireApprovalForWrites`, when provided, must be a JSON boolean. These schema
 findings are included in both Markdown and `--json` reports and exit with
 status `2`.

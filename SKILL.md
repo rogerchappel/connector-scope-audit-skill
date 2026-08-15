@@ -37,9 +37,13 @@ approval.
 Both JSON roots must be objects. Plan identifier fields (`scopes`,
 `dataClasses`/`data`, and `actions`) and policy allowlists (`allowedScopes`,
 `allowedDataClasses`/`allowedData`, `allowedReadActions`, and
-`allowedWriteActions`) accept one string or an array containing only strings.
-Other explicit values produce blocking schema findings instead of being
-coerced. `requireApprovalForWrites`, when present, must be a boolean.
+`allowedWriteActions`) accept one non-empty string or an array containing only
+non-empty strings. Empty arrays and omitted fields retain their normal
+missing-list behavior, but blank members produce field-specific blocking schema
+findings rather than being silently removed. Valid members are still trimmed,
+lowercased, and deduplicated. Other explicit values produce blocking schema
+findings instead of being coerced. `requireApprovalForWrites`, when present,
+must be a boolean.
 If both names in an alias pair are supplied, both values are validated and
 must be equivalent after normalization or the audit blocks. Plan data-class
 aliases are combined before allowlist evaluation, preventing either field from
