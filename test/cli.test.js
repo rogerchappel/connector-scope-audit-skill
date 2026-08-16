@@ -185,3 +185,29 @@ test("CLI emits block markdown for malformed list fields", async (t) => {
   assert.match(result.stdout, /BLOCK: Plan scopes must be a string or an array of strings\./);
   assert.match(result.stdout, /BLOCK: Policy allowed scopes must contain only strings\./);
 });
+
+test("CLI blocks mixed valid and blank canonical and alias list values", async (t) => {
+  const result = await runAudit(t, false, {
+    plan: {
+      actions: ["read", " "],
+      scopes: ["contacts.read", ""],
+      dataClasses: ["contact", "\t"],
+      data: ["contact", "\n"]
+    },
+    policy: {
+      allowedScopes: ["contacts.read", " "],
+      allowedDataClasses: ["contact", ""],
+      allowedData: ["contact", "\t"],
+      allowedReadActions: ["read", "\n"],
+      allowedWriteActions: ["update", "   "]
+    }
+  });
+
+  assert.equal(result.status, 2);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.decision, "block");
+  assert.ok(report.findings.some(({ message }) =>
+    message === "Plan data must contain only non-empty strings."));
+  assert.ok(report.findings.some(({ message }) =>
+    message === "Policy allowed write actions must contain only non-empty strings."));
+});
