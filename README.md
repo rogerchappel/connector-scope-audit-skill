@@ -116,3 +116,7 @@ Run the same local gates that CI runs before opening a PR:
 npm ci
 npm run release:check
 ```
+
+## JSON input schemas
+
+The repository publishes Draft 2020-12 JSON Schemas for plan and policy inputs in [`schemas/plan.schema.json`](schemas/plan.schema.json) and [`schemas/policy.schema.json`](schemas/policy.schema.json). They describe the accepted object shapes, including string-or-array list values and supported aliases. When both names in an alias pair are supplied, the runtime requires them to agree; schemas instead reject the ambiguous pair. Schema validity checks shape only: use the audit command to check a plan against policy.

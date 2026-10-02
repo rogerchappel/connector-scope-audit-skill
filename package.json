@@ -34,6 +34,7 @@
     "src",
     "docs",
     "examples",
+    "schemas",
     "fixtures",
     "scripts",
     "SKILL.md",
@@ -50,5 +51,8 @@
   "bugs": {
     "url": "https://github.com/rogerchappel/connector-scope-audit-skill/issues"
   },
-  "homepage": "https://github.com/rogerchappel/connector-scope-audit-skill#readme"
+  "homepage": "https://github.com/rogerchappel/connector-scope-audit-skill#readme",
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
 }
