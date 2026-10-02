@@ -322,3 +322,33 @@ test("renders markdown report", () => {
   const report = auditPlan({ connector: "crm", scopes: ["contacts.read"], dataClasses: ["contact"], actions: ["read"] }, policy);
   assert.match(renderMarkdown(report), /Connector Scope Audit/);
 });
+
+import Ajv2020 from "ajv/dist/2020.js";
+import { readFile } from "node:fs/promises";
+
+const ajv = new Ajv2020({ allErrors: true });
+const planSchema = JSON.parse(await readFile(new URL("../schemas/plan.schema.json", import.meta.url)));
+const policySchema = JSON.parse(await readFile(new URL("../schemas/policy.schema.json", import.meta.url)));
+const validatePlan = ajv.compile(planSchema);
+const validatePolicy = ajv.compile(policySchema);
+
+test("plan and policy schemas accept the documented fixtures and supported aliases", async () => {
+  assert.equal(validatePlan(JSON.parse(await readFile(new URL("../fixtures/action-plan.json", import.meta.url)))), true);
+  assert.equal(validatePolicy(JSON.parse(await readFile(new URL("../fixtures/policy.json", import.meta.url)))), true);
+  assert.equal(validatePlan({ connector: "crm", scopes: "contacts.read", actions: ["read"], data: ["contact"], approvalNote: "APP-42" }), true);
+  assert.equal(validatePolicy({ allowedScopes: ["contacts.read"], allowedData: "contact", allowedWriteActions: [], requireApprovalForWrites: false }), true);
+});
+
+test("plan and policy schemas reject malformed and conflicting input shapes", () => {
+  for (const value of [
+    { connector: "crm", scopes: [""], actions: ["read"] },
+    { connector: "crm", scopes: ["contacts.read"], actions: ["read"], dataClasses: ["contact"], data: ["contact"] },
+    { connector: "crm", scopes: ["contacts.read"], actions: ["read"], approval: "one", approvalNote: "two" },
+    { connector: "crm", scopes: [2], actions: ["read"] }
+  ]) assert.equal(validatePlan(value), false);
+  for (const value of [
+    { allowedScopes: [], allowedWriteActions: [], requireApprovalForWrites: "false" },
+    { allowedScopes: [], allowedWriteActions: [], requireApprovalForWrites: false, allowedData: [], allowedDataClasses: [] },
+    { allowedScopes: [""], allowedWriteActions: [], requireApprovalForWrites: false }
+  ]) assert.equal(validatePolicy(value), false);
+});

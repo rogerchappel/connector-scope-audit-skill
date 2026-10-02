@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/rogerchappel/connector-scope-audit-skill/blob/main/schemas/plan.schema.json",
+  "title": "Connector action plan",
+  "description": "Accepted plan input; data/dataClasses and approval/approvalNote are aliases, so use at most one spelling from each pair.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["connector", "scopes", "actions"],
+  "properties": {
+    "connector": { "type": "string", "minLength": 1 },
+    "scopes": { "$ref": "#/$defs/stringList" },
+    "dataClasses": { "$ref": "#/$defs/stringList" },
+    "data": { "$ref": "#/$defs/stringList" },
+    "actions": { "$ref": "#/$defs/stringList" },
+    "approval": { "type": "string" },
+    "approvalNote": { "type": "string" }
+  },
+  "allOf": [
+    { "not": { "required": ["dataClasses", "data"] } },
+    { "not": { "required": ["approval", "approvalNote"] } }
+  ],
+  "$defs": { "stringList": { "oneOf": [ { "type": "string", "minLength": 1 }, { "type": "array", "items": { "type": "string", "minLength": 1 } } ] } }
+}

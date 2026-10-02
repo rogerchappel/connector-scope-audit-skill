@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/rogerchappel/connector-scope-audit-skill/blob/main/schemas/policy.schema.json",
+  "title": "Connector audit policy",
+  "description": "Accepted policy input; allowedData is an alternate spelling for allowedDataClasses.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["allowedScopes", "allowedWriteActions", "requireApprovalForWrites"],
+  "properties": {
+    "allowedScopes": { "$ref": "#/$defs/stringList" },
+    "allowedDataClasses": { "$ref": "#/$defs/stringList" },
+    "allowedData": { "$ref": "#/$defs/stringList" },
+    "allowedReadActions": { "$ref": "#/$defs/stringList" },
+    "allowedWriteActions": { "$ref": "#/$defs/stringList" },
+    "requireApprovalForWrites": { "type": "boolean" }
+  },
+  "not": { "required": ["allowedDataClasses", "allowedData"] },
+  "$defs": { "stringList": { "oneOf": [ { "type": "string", "minLength": 1 }, { "type": "array", "items": { "type": "string", "minLength": 1 } } ] } }
+}

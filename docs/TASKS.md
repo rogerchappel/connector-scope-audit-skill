@@ -7,5 +7,5 @@
 - [x] Add fixture-backed tests.
 - [x] Add smoke and package checks.
 - [x] Document release-candidate evidence.
-- [ ] Add JSON schema examples for plan and policy files.
+- [x] Add JSON schemas for plan and policy files.
 - [ ] Add SARIF-like report output for larger automation lanes.
