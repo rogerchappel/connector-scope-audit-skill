@@ -27,3 +27,12 @@ The tool has no side effects beyond stdout and stderr.
   and non-string array members produce block findings without coercion.
 - Unknown scopes, data classes, or actions create block findings. Policies must
   classify each permitted action exactly once as read-only or write.
+
+## Planned automation report format
+
+SARIF-like output is a future capability, not a current output mode. The target
+contract is a result per finding (stable rule identifier, severity, message,
+and source location when available) plus the overall decision in run metadata.
+There is currently no `--sarif` flag and no SARIF conformance claim. Automation
+must use Markdown or native JSON until this capability is implemented and
+verified.

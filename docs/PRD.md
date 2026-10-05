@@ -34,3 +34,10 @@ Provide a local CLI and library that classify connector action plans as `pass`, 
 - A reviewer can see exactly why a plan passed, warned, or blocked.
 - Fixture tests cover pass, warn, and block decisions.
 - Smoke command proves the package works locally.
+
+## Planned larger-lane reporting
+
+A future SARIF-like output should map findings to results with stable rule
+identifiers, severity, messages, and source locations where available, and
+include the overall decision as run metadata. This is planned, not supported;
+there is no SARIF schema or compatibility guarantee at present.

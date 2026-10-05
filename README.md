@@ -120,3 +120,20 @@ npm run release:check
 ## JSON input schemas
 
 The repository publishes Draft 2020-12 JSON Schemas for plan and policy inputs in [`schemas/plan.schema.json`](schemas/plan.schema.json) and [`schemas/policy.schema.json`](schemas/policy.schema.json). They describe the accepted object shapes, including string-or-array list values and supported aliases. When both names in an alias pair are supplied, the runtime requires them to agree; schemas instead reject the ambiguous pair. Schema validity checks shape only: use the audit command to check a plan against policy.
+
+### Planned SARIF-like output (not supported)
+
+The CLI currently emits Markdown by default or the native audit report with
+`--json`. It does **not** emit SARIF, and there is no `--sarif` option today.
+For larger automation lanes, a future SARIF-like format is intended to map each
+finding to a result with a stable rule identifier, severity, message, and source
+location where available, plus the overall decision as run metadata. This is a
+planning contract only: consumers must not pass current output to SARIF tools or
+rely on SARIF schema compatibility until an implementation is documented.
+
+Once implemented, the expected usage is illustrative and not executable today:
+
+```sh
+# Planned only; current CLI rejects --sarif.
+connector-scope-audit audit plan.json --policy policy.json --sarif > audit.sarif
+```
