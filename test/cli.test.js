@@ -44,7 +44,7 @@ function runCli(args) {
   return spawnSync(process.execPath, [cli, ...args], { encoding: "utf8" });
 }
 
-const usage = "Usage: connector-scope-audit audit <plan.json> --policy <policy.json> [--json]\n";
+const usage = "Usage: connector-scope-audit audit <plan.json> --policy <policy.json> [--json|--sarif]\n";
 
 for (const malformed of [
   {
