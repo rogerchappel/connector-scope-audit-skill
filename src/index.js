@@ -243,3 +243,35 @@ function normalizeAliasedList(canonical, alias) {
 function normalizeAliasedString(canonical, alias) {
   return normalizeString(canonical) || normalizeString(alias);
 }
+
+const SARIF_RULES = {
+  info: { id: "audit-info", level: "note" },
+  warn: { id: "audit-warning", level: "warning" },
+  block: { id: "audit-block", level: "error" }
+};
+
+export function renderSarif(report) {
+  const rules = Object.entries(SARIF_RULES).map(([severity, rule]) => ({
+    id: rule.id,
+    shortDescription: { text: severity === "info" ? "Audit information" : `Audit ${severity} finding` }
+  }));
+  return {
+    $schema: "https://json.schemastore.org/sarif-2.1.0.json",
+    version: "2.1.0",
+    runs: [{
+      tool: { driver: { name: "connector-scope-audit", rules } },
+      invocations: [{
+        executionSuccessful: true,
+        properties: { decision: report.decision }
+      }],
+      results: report.findings.map((finding) => {
+        const rule = SARIF_RULES[finding.severity] ?? SARIF_RULES.info;
+        return {
+          ruleId: rule.id,
+          level: rule.level,
+          message: { text: finding.message }
+        };
+      })
+    }]
+  };
+}

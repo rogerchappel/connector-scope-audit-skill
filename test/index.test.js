@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { auditPlan, normalizePlan, renderMarkdown } from "../src/index.js";
+import { auditPlan, normalizePlan, renderMarkdown, renderSarif } from "../src/index.js";
 
 const policy = {
   allowedScopes: ["contacts.read", "contacts.write"],
@@ -321,6 +321,25 @@ test("blocks blank members in every plan and policy list field", () => {
 test("renders markdown report", () => {
   const report = auditPlan({ connector: "crm", scopes: ["contacts.read"], dataClasses: ["contact"], actions: ["read"] }, policy);
   assert.match(renderMarkdown(report), /Connector Scope Audit/);
+});
+
+test("renders deterministic SARIF 2.1.0 with severity mappings and decision metadata", () => {
+  const clean = auditPlan({ connector: "crm", scopes: ["contacts.read"], dataClasses: ["contact"], actions: ["read"] }, policy);
+  const cleanSarif = renderSarif(clean);
+  assert.equal(cleanSarif.version, "2.1.0");
+  assert.equal(cleanSarif.$schema, "https://json.schemastore.org/sarif-2.1.0.json");
+  assert.equal(cleanSarif.runs[0].invocations[0].properties.decision, "pass");
+  assert.deepEqual(renderSarif(clean), cleanSarif);
+  assert.equal(cleanSarif.runs[0].results.length, clean.findings.length);
+
+  const blocked = auditPlan({ connector: "crm", scopes: ["contacts.write"], dataClasses: ["contact"], actions: ["update"] }, policy);
+  const sarif = renderSarif(blocked);
+  assert.equal(sarif.runs[0].invocations[0].properties.decision, "block");
+  const result = sarif.runs[0].results.find(({ level }) => level === "error");
+  assert.ok(result);
+  assert.equal(result.ruleId, "audit-block");
+  assert.ok(result.message.text.includes("approval"));
+  assert.ok(sarif.runs[0].tool.driver.rules.some(({ id }) => id === result.ruleId));
 });
 
 import Ajv2020 from "ajv/dist/2020.js";
