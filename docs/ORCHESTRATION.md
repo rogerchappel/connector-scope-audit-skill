@@ -28,11 +28,9 @@ The tool has no side effects beyond stdout and stderr.
 - Unknown scopes, data classes, or actions create block findings. Policies must
   classify each permitted action exactly once as read-only or write.
 
-## Planned automation report format
+## SARIF automation report
 
-SARIF-like output is a future capability, not a current output mode. The target
-contract is a result per finding (stable rule identifier, severity, message,
-and source location when available) plus the overall decision in run metadata.
-There is currently no `--sarif` flag and no SARIF conformance claim. Automation
-must use Markdown or native JSON until this capability is implemented and
-verified.
+The `--sarif` output is SARIF 2.1.0 with a result for each finding (stable rule
+identifier, severity, and message) and the overall decision in run metadata.
+Source locations are omitted because audit findings do not retain input line
+positions.

@@ -8,4 +8,4 @@
 - [x] Add smoke and package checks.
 - [x] Document release-candidate evidence.
 - [x] Add JSON schemas for plan and policy files.
-- [ ] Add SARIF-like report output for larger automation lanes.
+- [x] Add SARIF 2.1.0 report output for larger automation lanes.
