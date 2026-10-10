@@ -37,7 +37,7 @@ Provide a local CLI and library that classify connector action plans as `pass`, 
 
 ## Planned larger-lane reporting
 
-A future SARIF-like output should map findings to results with stable rule
-identifiers, severity, messages, and source locations where available, and
-include the overall decision as run metadata. This is planned, not supported;
-there is no SARIF schema or compatibility guarantee at present.
+The SARIF 2.1.0 output maps findings to results with stable rule identifiers,
+severity, and messages, and includes the overall decision as run metadata.
+Source locations are omitted because findings do not identify individual input
+lines.
