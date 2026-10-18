@@ -10,7 +10,9 @@ Ship.
 - `npm run release:check`
 
 The release check runs package validation, the test suite, the fixture smoke
-test, and the packed-tarball smoke test used by CI.
+test, SARIF 2.1.0 CLI contract checks, and the packed-tarball smoke test used
+by CI. The SARIF check parses real CLI output from the action-plan and policy
+fixtures and verifies its version, run, tool-rule, and result structure.
 
 ## Known Limitations
 
