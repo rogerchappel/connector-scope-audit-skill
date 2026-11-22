@@ -2,7 +2,7 @@
 
 ## Node.js support
 
-This package supports Node.js 20, 22, 24, and 26. CI tests every supported major. The `engines.node` range accepts these lines; odd-numbered and future majors are not included until explicitly added to both this policy and the CI matrix.
+This package supports Node.js 20, 22, 24, 26, and 28. CI tests every supported major. The `engines.node` range accepts these lines; odd-numbered and future majors are not included until explicitly added to both this policy and the CI matrix.
 
 `connector-scope-audit-skill` reviews a local connector action plan before an agent asks for approval or performs a write. It compares requested scopes, data classes, and side effects against a local policy fixture and returns a `pass`, `warn`, or `block` decision.
 
